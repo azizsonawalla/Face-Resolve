@@ -1,52 +1,48 @@
 import org.opencv.core.*;
 import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
 import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
+
+import javax.imageio.ImageIO;
+import java.awt.geom.Arc2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
 
 public class FaceResolve {
 
-    // Compulsory
-    static{ System.loadLibrary(Core.NATIVE_LIBRARY_NAME); }
-
-    public void detect(){
+    public Face findFace(String file){
         // Loading the OpenCV core library
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME );
-
+        CascadeClassifier cascadeClassifier = new CascadeClassifier("D:\\Personal Coding Projects\\Face-resolve\\opencv\\sources\\data\\lbpcascades\\lbpcascade_frontalface_improved.xml");
         // Reading the Image from the file and storing it in to a Matrix object
-        String file ="D:\\Personal Coding Projects\\Face-resolve\\sample6.jpg";
         Mat src = Imgcodecs.imread(file);
-
-        // Instantiating the CascadeClassifier
-        String xmlFile = "D:\\Personal Coding Projects\\Face-resolve\\opencv\\sources\\data\\lbpcascades\\lbpcascade_frontalface_improved.xml";
-        CascadeClassifier classifier = new CascadeClassifier(xmlFile);
-
-        // Detecting the face in the snap
-        MatOfRect faceDetections = new MatOfRect();
-        classifier.detectMultiScale(src, faceDetections);
-        System.out.println(String.format("Detected %s faces",
-                faceDetections.toArray().length));
-
-        // Drawing boxes
-        for (Rect rect : faceDetections.toArray()) {
-            Imgproc.rectangle(
-                    src,                                               // where to draw the box
-                    new Point(rect.x, rect.y),                            // bottom left
-                    new Point(rect.x + rect.width, rect.y + rect.height), // top right
-                    new Scalar(0, 0, 255),
-                    3                                                     // RGB colour
-            );
-        }
-
-        // Writing the image
-        Imgcodecs.imwrite("D:\\Personal Coding Projects\\Face-resolve\\sample6-out.jpg", src);
-
-        System.out.println("Image Processed");
+        // Detecting the face
+        MatOfRect faces = new MatOfRect();
+        cascadeClassifier.detectMultiScale(src, faces);
+        Rect face = faces.toArray()[0];
+        return new Face(face.x, face.y, face.width, face.height);
     }
 
     public static void main(String[] args) {
+        String inputFile = "D:\\Personal Coding Projects\\Face-resolve\\sample6.jpg";
+        String outputFile = "D:\\Personal Coding Projects\\Face-resolve\\sample6-out.jpg";
+        // Detect face from image path
         FaceResolve faceResolve = new FaceResolve();
-        faceResolve.detect();
+        Face face = faceResolve.findFace(inputFile);
+        // Load image
+        BufferedImage originalImage;
+        try {
+            originalImage = ImageIO.read(new File(inputFile));
+        } catch (Exception e) {
+            return;
+        }
+        // Crop image
+        BufferedImage croppedImage = originalImage.getSubimage(face.getTopLeft().x - (face.getWidth()/2), face.getTopLeft().y - ((int) Math.round(face.getHeight()/1.15)), (int) Math.round(face.getWidth()*2), (int) Math.round(face.getHeight()*2.25));
+        // Export image
+        try {
+            ImageIO.write(croppedImage, "jpg", new File(outputFile));
+        } catch (Exception e) {
+            return;
+        }
     }
 }
