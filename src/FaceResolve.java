@@ -46,18 +46,23 @@ public class FaceResolve {
         return originalImage;
     }
 
-    private Headshot calculateCrop(Headshot headshot, Double aspectRatio, Double faceHeightProportion, Double vertOffset, Double horOffset) {
-        Double faceHeight = headshot.getFaceHeight()*1.0;
+    private Headshot calculateCrop(Headshot headshot, Double aspectRatio, Double headHeightProportion, Double vertOffset, Double horOffset) {
         Double faceWidth = headshot.getFaceWidth()*1.0;
+        Double faceHeight = headshot.getFaceHeight()*1.0;
+        Double faceCenterX = headshot.getFaceTopLeft().x + (faceWidth/2.0);
+        Double faceCenterY = headshot.getFaceTopLeft().y + (faceHeight/2.0);
 
-        Double frameHeight = (1.0 + faceHeightProportion)*faceHeight;
+        Double headHeight = faceHeight*1.8;
+        Double headWidth = faceWidth*1.25;
+        Double headCenterX = faceCenterX;
+        Double headCenterY = faceCenterY - (faceHeight/4);
+        Point headTopLeft = new Point((int) Math.round(headCenterX-0.5*headWidth), (int) Math.round(headCenterY-0.5*headHeight));
+
+        Double frameHeight = headHeight/headHeightProportion;
         Double frameWidth = frameHeight*aspectRatio;
-
-        Double faceCenterX = headshot.getFaceTopLeft().x + (faceWidth/2);
-        Double faceCenterY = headshot.getFaceTopLeft().y + (faceHeight/2);
-        int frameCenterX = (int) Math.round(faceCenterX + (horOffset * frameWidth));
-        int frameCenterY = (int) Math.round(faceCenterY + (vertOffset * frameHeight));
-        Point frameTopLeft = new Point((int) Math.round(frameCenterX - (frameWidth/2)), (int) Math.round(frameCenterY - (frameHeight/2)));
+        Double frameTopLeftX = headCenterX - (frameWidth/2.0) + (horOffset*headWidth);
+        Double frameTopLeftY = headCenterY - (frameHeight/2.0) + (vertOffset*headHeight);
+        Point frameTopLeft = new Point((int) Math.round(frameTopLeftX), (int) Math.round(frameTopLeftY));
 
         headshot.setFrameTopLeft(frameTopLeft);
         headshot.setFrameWidth((int) Math.round(frameWidth));
@@ -67,13 +72,13 @@ public class FaceResolve {
 
     public static void main(String[] args) {
         String inputFile = "D:\\Personal Coding Projects\\Face-resolve\\sample1.jpg";
-        String outputFile = "D:\\Personal Coding Projects\\Face-resolve\\sample1-out1.jpg";
+        String outputFile = "D:\\Personal Coding Projects\\Face-resolve\\sample1-out2.jpg";
         String outputFormat = "jpg";
         String cascadesXml = "D:\\Personal Coding Projects\\Face-resolve\\opencv\\sources\\data\\lbpcascades\\lbpcascade_frontalface_improved.xml";
         int outputWidth = 3;
-        int outputHeight = 5;
+        int outputHeight = 4;
         Double outputAspectRatio = (outputWidth*1.0)/(outputHeight*1.0);
-        Double faceHeightProportion = 0.5;
+        Double faceHeightProportion = 0.8;
         Double vertOffset = 0.0;
         Double horOffset = 0.0;
 
