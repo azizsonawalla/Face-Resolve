@@ -30,7 +30,7 @@ public class FaceResolve {
         return new Headshot(face.x, face.y, face.width, face.height, importImage(this.INPUT_FILE_PATH));
     }
 
-    private Headshot calculateCrop(Headshot headshot) throws Exception {
+    private Headshot calculateCrop(Headshot headshot){
         /* Definitions */
         // Face: portion of the image detected by OpenCV, from top of eyes to bottom of lips
         // Head: from hairline to bottom of chin
@@ -55,10 +55,6 @@ public class FaceResolve {
         Double frameWidth = frameHeight*this.OUTPUT_ASPECT_RATIO;
         Double frameTopLeftX = headCenterX - (frameWidth/2.0) - (this.FACE_HOR_OFFSET*headWidth);
         Double frameTopLeftY = headCenterY - (frameHeight/2.0) - (this.FACE_VERT_OFFSET*headHeight);
-        if ( frameTopLeftX * frameTopLeftY < 0){
-            throw new Exception("Crop specified is outside of image bounds");
-            //TODO: Add bounds check for other params as well
-        }
         Point frameTopLeft = new Point((int) Math.round(frameTopLeftX), (int) Math.round(frameTopLeftY));
 
         headshot.setFrameTopLeft(frameTopLeft);
@@ -67,8 +63,23 @@ public class FaceResolve {
         return headshot;
     }
 
-    private BufferedImage cropImage(BufferedImage originalImage, Point topLeft, int width, int height) {
-        return originalImage.getSubimage(topLeft.x, topLeft.y, width, height);
+    private BufferedImage cropImage(BufferedImage originalImage, Point topLeft, int width, int height) throws Exception{
+        int topLeftX = topLeft.x;
+        int topLeftY = topLeft.y;
+        int bottomLeftX = topLeftX + width;
+        int bottomLeftY = topLeftY + height;
+        Boolean xTopBoundaryCheck = outOfBounds(topLeftX, 0, originalImage.getWidth()-1);
+        Boolean yTopBoundaryCheck = outOfBounds(topLeftY, 0, originalImage.getHeight()-1);
+        Boolean xBottomBoundaryCheck = outOfBounds(bottomLeftX, topLeftX, originalImage.getWidth()-1);
+        Boolean yBottomBoundaryCheck = outOfBounds(bottomLeftY, topLeftY, originalImage.getHeight()-1);
+        if (xTopBoundaryCheck || yTopBoundaryCheck || xBottomBoundaryCheck || yBottomBoundaryCheck){
+            throw new Exception("Crop Margin Error");
+        }
+        return originalImage.getSubimage(topLeftX, topLeftY, width, height);
+    }
+
+    private Boolean outOfBounds(int num, int min, int max) {
+        return (num < min) || (num > max);
     }
 
     private void exportImage(BufferedImage image, String format, String path) {
@@ -156,10 +167,15 @@ public class FaceResolve {
 
     /* End of getters and setters */
 
-    private void controller() throws Exception{
+    private void controller(){
         Headshot headshot = findFace();
         headshot = calculateCrop(headshot);
-        headshot.setCroppedImage(cropImage(headshot.getOriginalImage(), headshot.getFrameTopLeft(), headshot.getFrameWidth(), headshot.getFrameHeight()));
+        try {
+            headshot.setCroppedImage(cropImage(headshot.getOriginalImage(), headshot.getFrameTopLeft(), headshot.getFrameWidth(), headshot.getFrameHeight()));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return;
+        }
         exportImage(headshot.getCroppedImage(), this.OUTPUT_FORMAT, this.OUTPUT_FILE_PATH);
     }
 
