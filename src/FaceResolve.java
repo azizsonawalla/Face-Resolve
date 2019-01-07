@@ -16,7 +16,7 @@ public class FaceResolve {
     private String OUTPUT_FORMAT = "jpg";
     private String CASCADES_XML = "D:\\Personal Coding Projects\\Face-resolve\\opencv\\sources\\data\\lbpcascades\\lbpcascade_frontalface_improved.xml";
     private Double OUTPUT_ASPECT_RATIO = 1.0;
-    private Double FACE_ZOOM = 0.1;
+    private Double FACE_ZOOM = 0.5;
     private Double FACE_VERT_OFFSET = -0.3;
     private Double FACE_HOR_OFFSET = 0.0;
 
@@ -53,8 +53,8 @@ public class FaceResolve {
 
         Double frameHeight = headHeight/this.FACE_ZOOM;
         Double frameWidth = frameHeight*this.OUTPUT_ASPECT_RATIO;
-        Double frameTopLeftX = headCenterX - (frameWidth/2.0) - (this.FACE_HOR_OFFSET*headWidth);
-        Double frameTopLeftY = headCenterY - (frameHeight/2.0) - (this.FACE_VERT_OFFSET*headHeight);
+        Double frameTopLeftX = headCenterX - (frameWidth/2.0) - (this.FACE_HOR_OFFSET*(frameWidth/2.0));
+        Double frameTopLeftY = headCenterY - (frameHeight/2.0) - (this.FACE_VERT_OFFSET*(frameHeight/2.0));
         Point frameTopLeft = new Point((int) Math.round(frameTopLeftX), (int) Math.round(frameTopLeftY));
 
         headshot.setFrameTopLeft(frameTopLeft);
