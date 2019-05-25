@@ -8,26 +8,60 @@ import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-public class FaceResolve {
+public class FaceResolve implements Runnable {
+
+    private String CASCADES_XML =
+            new File("opencv/sources/data/lbpcascades/lbpcascade_frontalface_improved.xml").getAbsolutePath();
 
     /* User image configuration */
-    private String INPUT_FILE_PATH = "D:\\Personal Coding Projects\\Face-resolve\\sample6.jpg";
-    private String OUTPUT_FILE_PATH = "D:\\Personal Coding Projects\\Face-resolve\\sample6-out1.jpg";
-    private String OUTPUT_FORMAT = "jpg";
-    private String CASCADES_XML = "D:\\Personal Coding Projects\\Face-resolve\\opencv\\sources\\data\\lbpcascades\\lbpcascade_frontalface_improved.xml";
-    private Double OUTPUT_ASPECT_RATIO = 1.0;
-    private Double FACE_ZOOM = 0.5;
-    private Double FACE_VERT_OFFSET = -0.3;
-    private Double FACE_HOR_OFFSET = 0.0;
+    private String inputPath;
+    private String outputPath;
+    private String outputFormat;
+    private Double outputAspectRatio;
+    private Double outputWidth;
+    private Double outputHeight;
+    private Double faceSize;
+    private Double faceVerticalOffset;
+    private Double faceHorizontalOffset;
+
+    public FaceResolve(String inputPath, String outputPath, String outputFormat, Double outputAspectRatio,
+                       Double outputHeight, Double outputWidth, Double faceSize, Double vertOffset, Double horOffset) {
+        this.inputPath = inputPath;
+        this.outputPath = outputPath;
+        this.outputFormat = outputFormat;
+        if (outputWidth >=0 && outputHeight >= 0) {
+            this.outputHeight = outputHeight;
+            this.outputWidth = outputWidth;
+            this.outputAspectRatio = outputWidth/outputHeight;
+        } else {
+            this.outputAspectRatio = outputAspectRatio;
+        }
+        this.faceSize = faceSize;
+        this.faceVerticalOffset = vertOffset;
+        this.faceHorizontalOffset = horOffset;
+    }
 
     private Headshot findFace(){
         System.loadLibrary( Core.NATIVE_LIBRARY_NAME ); // Loading the OpenCV core library
         CascadeClassifier cascadeClassifier = new CascadeClassifier(this.CASCADES_XML);
-        Mat source = Imgcodecs.imread(this.INPUT_FILE_PATH);
-        MatOfRect faces = new MatOfRect();
-        cascadeClassifier.detectMultiScale(source, faces);
-        Rect face = faces.toArray()[0];
-        return new Headshot(face.x, face.y, face.width, face.height, importImage(this.INPUT_FILE_PATH));
+        Mat source = Imgcodecs.imread(this.inputPath);
+        Rect[] facesArray = new Rect[0];
+        for (int i=0; i<100; i++){
+            MatOfRect faces = new MatOfRect();
+            MatOfInt reject = new MatOfInt();
+            MatOfDouble weight = new MatOfDouble();
+            cascadeClassifier.detectMultiScale3(source, faces, reject, weight, 1.1, i,0, new Size(), new Size(), true);
+            facesArray = faces.toArray();
+            if (facesArray.length == 1) {
+                break;
+            }
+            if (facesArray.length == 0) {
+                cascadeClassifier.detectMultiScale3(source, faces, reject, weight, 1.1, i+1,0, new Size(), new Size(), true);
+                break;
+            }
+        }
+        Rect face = facesArray[0];
+        return new Headshot(face.x, face.y, face.width, face.height, importImage(this.inputPath));
     }
 
     private Headshot calculateCrop(Headshot headshot){
@@ -51,10 +85,10 @@ public class FaceResolve {
         Double headCenterX = faceCenterX;
         Double headCenterY = faceCenterY - (faceHeight*HEAD_TO_FACE_CENTER_OFFSET);
 
-        Double frameHeight = headHeight/this.FACE_ZOOM;
-        Double frameWidth = frameHeight*this.OUTPUT_ASPECT_RATIO;
-        Double frameTopLeftX = headCenterX - (frameWidth/2.0) - (this.FACE_HOR_OFFSET*(frameWidth/2.0));
-        Double frameTopLeftY = headCenterY - (frameHeight/2.0) - (this.FACE_VERT_OFFSET*(frameHeight/2.0));
+        Double frameHeight = headHeight/this.faceSize;
+        Double frameWidth = frameHeight*this.outputAspectRatio;
+        Double frameTopLeftX = headCenterX - (frameWidth/2.0) - (this.faceHorizontalOffset *(frameWidth/2.0));
+        Double frameTopLeftY = headCenterY - (frameHeight/2.0) - (this.faceVerticalOffset *(frameHeight/2.0));
         Point frameTopLeft = new Point((int) Math.round(frameTopLeftX), (int) Math.round(frameTopLeftY));
 
         headshot.setFrameTopLeft(frameTopLeft);
@@ -100,87 +134,16 @@ public class FaceResolve {
         return originalImage;
     }
 
-    /* Getters and setters */
-    public String getINPUT_FILE_PATH() {
-        return INPUT_FILE_PATH;
-    }
-
-    public void setINPUT_FILE_PATH(String INPUT_FILE_PATH) {
-        this.INPUT_FILE_PATH = INPUT_FILE_PATH;
-    }
-
-    public String getOUTPUT_FILE_PATH() {
-        return OUTPUT_FILE_PATH;
-    }
-
-    public void setOUTPUT_FILE_PATH(String OUTPUT_FILE_PATH) {
-        this.OUTPUT_FILE_PATH = OUTPUT_FILE_PATH;
-    }
-
-    public String getOUTPUT_FORMAT() {
-        return OUTPUT_FORMAT;
-    }
-
-    public void setOUTPUT_FORMAT(String OUTPUT_FORMAT) {
-        this.OUTPUT_FORMAT = OUTPUT_FORMAT;
-    }
-
-    public String getCASCADES_XML() {
-        return CASCADES_XML;
-    }
-
-    public void setCASCADES_XML(String CASCADES_XML) {
-        this.CASCADES_XML = CASCADES_XML;
-    }
-
-    public Double getOUTPUT_ASPECT_RATIO() {
-        return OUTPUT_ASPECT_RATIO;
-    }
-
-    public void setOUTPUT_ASPECT_RATIO(Double OUTPUT_ASPECT_RATIO) {
-        this.OUTPUT_ASPECT_RATIO = OUTPUT_ASPECT_RATIO;
-    }
-
-    public Double getFACE_ZOOM() {
-        return FACE_ZOOM;
-    }
-
-    public void setFACE_ZOOM(Double FACE_ZOOM) {
-        this.FACE_ZOOM = FACE_ZOOM;
-    }
-
-    public Double getFACE_VERT_OFFSET() {
-        return FACE_VERT_OFFSET;
-    }
-
-    public void setFACE_VERT_OFFSET(Double FACE_VERT_OFFSET) {
-        this.FACE_VERT_OFFSET = FACE_VERT_OFFSET;
-    }
-
-    public Double getFACE_HOR_OFFSET() {
-        return FACE_HOR_OFFSET;
-    }
-
-    public void setFACE_HOR_OFFSET(Double FACE_HOR_OFFSET) {
-        this.FACE_HOR_OFFSET = FACE_HOR_OFFSET;
-    }
-
-    /* End of getters and setters */
-
-    private void controller(){
+    public void run(){
         Headshot headshot = findFace();
         headshot = calculateCrop(headshot);
         try {
-            headshot.setCroppedImage(cropImage(headshot.getOriginalImage(), headshot.getFrameTopLeft(), headshot.getFrameWidth(), headshot.getFrameHeight()));
+            headshot.setCroppedImage(cropImage(headshot.getOriginalImage(), headshot.getFrameTopLeft(),
+                                     headshot.getFrameWidth(), headshot.getFrameHeight()));
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return;
         }
-        exportImage(headshot.getCroppedImage(), this.OUTPUT_FORMAT, this.OUTPUT_FILE_PATH);
-    }
-
-    public static void main(String[] args) throws Exception{
-        FaceResolve faceResolve = new FaceResolve();
-        faceResolve.controller();
+        exportImage(headshot.getCroppedImage(), this.outputFormat, this.outputPath);
     }
 }
