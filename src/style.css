@@ -1,0 +1,25 @@
+AnchorPane {
+    -fx-background-color: #202020;
+}
+
+Button {
+    -fx-font-size: 14px;
+    -fx-font-family: helvetica;
+    -fx-text-fill: #B0B0B0;
+    -fx-background-color: transparent;
+    -fx-border-color: #909090;
+    -fx-border-radius: 20px;
+    -fx-cursor: hand;
+}
+
+Label {
+    -fx-font-size: 14px;
+    -fx-font-family: helvetica;
+    -fx-text-fill: #B0B0B0;
+}
+
+CheckBox {
+    -fx-font-size: 14px;
+    -fx-font-family: helvetica;
+    -fx-text-fill: #B0B0B0;
+}

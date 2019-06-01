@@ -2,7 +2,6 @@ import org.opencv.core.*;
 import org.opencv.core.Mat;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.objdetect.CascadeClassifier;
-
 import javax.imageio.ImageIO;
 import java.awt.Point;
 import java.awt.image.BufferedImage;

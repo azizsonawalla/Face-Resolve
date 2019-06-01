@@ -1,14 +1,17 @@
+import javafx.fxml.Initializable;
+
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class Controller {
+public class Controller implements Initializable {
 
-
-    public static void main(String[] args) throws InterruptedException {
+    public static void run() throws InterruptedException {
         List<String> inputFiles = new ArrayList<>();
         for (int i=1; i <= 5; i++) {
             inputFiles.add(String.format("\\sample(%d).jpg", i));
@@ -21,29 +24,19 @@ public class Controller {
         Double faceVerticalOffset = -0.3;
         Double faceHorizontalOffset = 0.0;
 
-        boolean MULTITHREADED = true;
-        long start = System.currentTimeMillis();
-
-        if (MULTITHREADED) {
-            ExecutorService pool = Executors.newFixedThreadPool(100);
-            for (String filename : inputFiles) {
-                System.out.println(inputPathTemplate + filename);
-                FaceResolve faceResolve = new FaceResolve(inputPathTemplate + filename, outputPathTemplate + filename,
-                        outputFormat, outputAspectRatio, -1.0, -1.0, faceSize, faceVerticalOffset, faceHorizontalOffset);
-                pool.execute(faceResolve);
-            }
-            pool.shutdown();
-            pool.awaitTermination(10, TimeUnit.MINUTES);
-        } else {
-            for (String filename : inputFiles) {
-                System.out.println(inputPathTemplate + filename);
-                FaceResolve faceResolve = new FaceResolve(inputPathTemplate + filename, outputPathTemplate + filename,
-                        outputFormat, outputAspectRatio, -1.0, -1.0, faceSize, faceVerticalOffset, faceHorizontalOffset);
-                faceResolve.run();
-            }
+        ExecutorService pool = Executors.newFixedThreadPool(100);
+        for (String filename : inputFiles) {
+            System.out.println(inputPathTemplate + filename);
+            FaceResolve faceResolve = new FaceResolve(inputPathTemplate + filename, outputPathTemplate + filename,
+                    outputFormat, outputAspectRatio, -1.0, -1.0, faceSize, faceVerticalOffset, faceHorizontalOffset);
+            pool.execute(faceResolve);
         }
+        pool.shutdown();
+        pool.awaitTermination(10, TimeUnit.MINUTES);
+    }
 
-        long duration = System.currentTimeMillis() - start;
-        System.out.println(String.format("Operation took %d seconds", duration/1000));
+    @Override
+    public void initialize(URL url, ResourceBundle resourceBundle) {
+
     }
 }
